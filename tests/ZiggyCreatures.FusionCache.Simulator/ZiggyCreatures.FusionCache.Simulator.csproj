@@ -10,6 +10,7 @@
 			
 	<ItemGroup>
 		<PackageReference Include="FASTERCache" Version="0.1.21" />
+		<PackageReference Include="Microsoft.Extensions.Caching.Cosmos" Version="1.7.0" />
 		<PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="9.0.0" />
 		<PackageReference Include="Serilog" Version="4.2.0" />
 		<PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />
@@ -22,6 +23,7 @@
 		<ProjectReference Include="..\..\src\ZiggyCreatures.FusionCache.Chaos\ZiggyCreatures.FusionCache.Chaos.csproj" />
 		<ProjectReference Include="..\..\src\ZiggyCreatures.FusionCache\ZiggyCreatures.FusionCache.csproj" />
 		<ProjectReference Include="..\..\src\ZiggyCreatures.FusionCache.Serialization.NewtonsoftJson\ZiggyCreatures.FusionCache.Serialization.NewtonsoftJson.csproj" />
+		<ProjectReference Include="..\..\ZiggyCreatures.FusionCache.Backplane.AzureServiceBus\ZiggyCreatures.FusionCache.Backplane.AzureServiceBus.csproj" />
 	</ItemGroup>
 
 </Project>
