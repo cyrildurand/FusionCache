@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Diagnostics;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -11,6 +12,7 @@ namespace ZiggyCreatures.Caching.Fusion;
 /// <br/><br/>
 /// <strong>DOCS:</strong> <see href="https://github.com/ZiggyCreatures/FusionCache/blob/main/docs/Options.md"/>
 /// </summary>
+[DebuggerDisplay($"{{{nameof(GetDebuggerDisplay)}(),nq}}")]
 public class FusionCacheOptions
 	: IOptions<FusionCacheOptions>
 {
@@ -82,7 +84,7 @@ public class FusionCacheOptions
 			Size = 1
 		};
 
-		//TagsMemoryCacheDurationOverride = TimeSpan.FromSeconds(30);
+		WaitForInitialBackplaneSubscribe = false;
 
 		SkipAutoCloneForImmutableObjects = true;
 
@@ -224,6 +226,13 @@ public class FusionCacheOptions
 	/// <strong>DOCS:</strong> <see href="https://github.com/ZiggyCreatures/FusionCache/blob/main/docs/Backplane.md"/>
 	/// </summary>
 	public string? BackplaneChannelPrefix { get; set; }
+
+	/// <summary>
+	/// When using a backplane, if set to <see langword="true"/> FusionCache will wait for the initial Subscribe operation, otherwise it will not.
+	/// <br/><br/>
+	/// <strong>DOCS:</strong> <see href="https://github.com/ZiggyCreatures/FusionCache/blob/main/docs/Backplane.md"/>
+	/// </summary>
+	public bool WaitForInitialBackplaneSubscribe { get; set; }
 
 	/// <summary>
 	/// Ignores incoming backplane notifications, which normally is <strong>DANGEROUS</strong>.
@@ -543,6 +552,7 @@ public class FusionCacheOptions
 			BackplaneChannelPrefix = BackplaneChannelPrefix,
 			IgnoreIncomingBackplaneNotifications = IgnoreIncomingBackplaneNotifications,
 			BackplaneCircuitBreakerDuration = BackplaneCircuitBreakerDuration,
+			WaitForInitialBackplaneSubscribe = WaitForInitialBackplaneSubscribe,
 
 			DistributedCacheKeyModifierMode = DistributedCacheKeyModifierMode,
 			DistributedCacheCircuitBreakerDuration = DistributedCacheCircuitBreakerDuration,
@@ -584,5 +594,10 @@ public class FusionCacheOptions
 		};
 
 		return res;
+	}
+
+	private string GetDebuggerDisplay()
+	{
+		return $"Options Name={CacheName}";
 	}
 }

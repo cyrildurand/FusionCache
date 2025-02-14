@@ -9,6 +9,79 @@ namespace ZiggyCreatures.Caching.Fusion.Internals.Backplane;
 
 internal partial class BackplaneAccessor
 {
+	public void Subscribe()
+	{
+		var operationId = FusionCacheInternalUtils.MaybeGenerateOperationId(_logger);
+
+		var channelName = _options.GetBackplaneChannelName();
+
+		try
+		{
+			if (_logger?.IsEnabled(LogLevel.Trace) ?? false)
+				_logger.Log(LogLevel.Trace, "FUSION [N={CacheName} I={CacheInstanceId}] (O={CacheOperationId}): [BP] before subscribing to backplane on channel {BackplaneChannel}", _cache.CacheName, _cache.InstanceId, operationId, channelName);
+
+			var retriesLeft = 3;
+			while (retriesLeft > 0)
+			{
+				retriesLeft--;
+
+				try
+				{
+					_backplane.Subscribe(
+						new BackplaneSubscriptionOptions(
+							_cache.CacheName,
+							_cache.InstanceId,
+							channelName,
+							HandleConnect,
+							HandleIncomingMessage,
+							HandleConnectAsync,
+							HandleIncomingMessageAsync
+						)
+					);
+
+					break;
+				}
+				catch (Exception exc)
+				{
+					if (_logger?.IsEnabled(LogLevel.Error) ?? false)
+						_logger.Log(LogLevel.Error, exc, "FUSION [N={CacheName} I={CacheInstanceId}] (O={CacheOperationId}): [BP] an error occurred while subscribing to a backplane of type {BackplaneType} on channel {BackplaneChannel} ({RetriesLeft} retries left)", _cache.CacheName, _cache.InstanceId, operationId, _backplane.GetType().FullName, channelName, retriesLeft);
+
+					if (retriesLeft <= 0)
+						throw;
+
+					Thread.Sleep(250);
+				}
+			}
+
+			if (_logger?.IsEnabled(LogLevel.Trace) ?? false)
+				_logger.Log(LogLevel.Trace, "FUSION [N={CacheName} I={CacheInstanceId}] (O={CacheOperationId}): [BP] after subscribing to backplane on channel {BackplaneChannel}", _cache.CacheName, _cache.InstanceId, operationId, channelName);
+		}
+		catch (Exception exc)
+		{
+			ProcessError(operationId, "", exc, $"subscribing to a backplane of type {_backplane.GetType().FullName}");
+		}
+	}
+
+	public void Unsubscribe()
+	{
+		var operationId = FusionCacheInternalUtils.MaybeGenerateOperationId(_logger);
+
+		try
+		{
+			if (_logger?.IsEnabled(LogLevel.Trace) ?? false)
+				_logger.Log(LogLevel.Trace, "FUSION [N={CacheName} I={CacheInstanceId}] (O={CacheOperationId}): [BP] before unsubscribing to backplane", _cache.CacheName, _cache.InstanceId, operationId);
+
+			_backplane.Unsubscribe();
+
+			if (_logger?.IsEnabled(LogLevel.Trace) ?? false)
+				_logger.Log(LogLevel.Trace, "FUSION [N={CacheName} I={CacheInstanceId}] (O={CacheOperationId}): [BP] after unsubscribing to backplane", _cache.CacheName, _cache.InstanceId, operationId);
+		}
+		catch (Exception exc)
+		{
+			ProcessError(operationId, "", exc, $"unsubscribing from a backplane of type {_backplane.GetType().FullName}");
+		}
+	}
+
 	private bool Publish(string operationId, BackplaneMessage message, FusionCacheEntryOptions options, bool isAutoRecovery, bool isBackground, CancellationToken token)
 	{
 		if (CheckMessage(operationId, message, isAutoRecovery) == false)
@@ -76,6 +149,9 @@ internal partial class BackplaneAccessor
 
 	public bool PublishSet(string operationId, string key, long timestamp, FusionCacheEntryOptions options, bool isAutoRecovery, bool isBackground, CancellationToken token)
 	{
+		if (_logger?.IsEnabled(LogLevel.Debug) ?? false)
+			_logger.Log(LogLevel.Debug, "FUSION [N={CacheName} I={CacheInstanceId}] (O={CacheOperationId} K={CacheKey}): [BP] publishing set", _options.CacheName, _options.InstanceId, operationId, key);
+
 		var message = BackplaneMessage.CreateForEntrySet(_cache.InstanceId, key, timestamp);
 
 		return Publish(operationId, message, options, isAutoRecovery, isBackground, token);
@@ -83,6 +159,9 @@ internal partial class BackplaneAccessor
 
 	public bool PublishRemove(string operationId, string key, long timestamp, FusionCacheEntryOptions options, bool isAutoRecovery, bool isBackground, CancellationToken token)
 	{
+		if (_logger?.IsEnabled(LogLevel.Debug) ?? false)
+			_logger.Log(LogLevel.Debug, "FUSION [N={CacheName} I={CacheInstanceId}] (O={CacheOperationId} K={CacheKey}): [BP] publishing remove", _options.CacheName, _options.InstanceId, operationId, key);
+
 		var message = BackplaneMessage.CreateForEntryRemove(_cache.InstanceId, key, timestamp);
 
 		return Publish(operationId, message, options, isAutoRecovery, isBackground, token);
@@ -90,6 +169,9 @@ internal partial class BackplaneAccessor
 
 	public bool PublishExpire(string operationId, string key, long timestamp, FusionCacheEntryOptions options, bool isAutoRecovery, bool isBackground, CancellationToken token)
 	{
+		if (_logger?.IsEnabled(LogLevel.Debug) ?? false)
+			_logger.Log(LogLevel.Debug, "FUSION [N={CacheName} I={CacheInstanceId}] (O={CacheOperationId} K={CacheKey}): [BP] publishing expire", _options.CacheName, _options.InstanceId, operationId, key);
+
 		var message = options.IsFailSafeEnabled
 			? BackplaneMessage.CreateForEntryExpire(_cache.InstanceId, key, timestamp)
 			: BackplaneMessage.CreateForEntryRemove(_cache.InstanceId, key, timestamp);
@@ -317,9 +399,6 @@ internal partial class BackplaneAccessor
 		//if (message.CacheKey is null)
 		if (message.CacheKey is null || message.CacheKey.StartsWith(_cache.TagInternalCacheKeyPrefix) == false)
 		{
-			if (_logger?.IsEnabled(LogLevel.Trace) ?? false)
-				_logger.Log(LogLevel.Trace, "FUSION [N={CacheName} I={CacheInstanceId}] (O={CacheOperationId} K={CacheKey}): [BP] XXX 02 {RemoteCacheInstanceId}", _cache.CacheName, _cache.InstanceId, operationId, message.CacheKey, message.SourceId);
-
 			return;
 		}
 
