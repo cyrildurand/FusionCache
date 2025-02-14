@@ -44,7 +44,7 @@ namespace ZiggyCreatures.FusionCache.Backplane.AzureServiceBus
 			this.UnsubscribeAsync().GetAwaiter().GetResult();
 		}
 
-		private async Task SubscribeAsync(BackplaneSubscriptionOptions options)
+		public async ValueTask SubscribeAsync(BackplaneSubscriptionOptions options)
 		{
 			if (!await this._serviceBusAdministrationClient.TopicExistsAsync(topicName))
 			{
@@ -71,7 +71,7 @@ namespace ZiggyCreatures.FusionCache.Backplane.AzureServiceBus
 			await this._serviceBusProcessor.StartProcessingAsync();
 		}
 
-		private async Task UnsubscribeAsync()
+		public async ValueTask UnsubscribeAsync()
 		{
 			await this._serviceBusProcessor.StopProcessingAsync();
 			await this._serviceBusProcessor.DisposeAsync();
