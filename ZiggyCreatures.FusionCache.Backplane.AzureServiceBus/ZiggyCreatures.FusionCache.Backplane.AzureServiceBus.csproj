@@ -1,17 +1,32 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>netstandard2.0</TargetFramework>
+		<Version>2.1.0</Version>
+		<PackageId>ZiggyCreatures.FusionCache.Backplane.AzureServiceBus</PackageId>
+		<Description>FusionCache backplane for Azure Service bus</Description>
+		<PackageTags>backplane;azure;service-bus;stackexchange;caching;cache;hybrid;hybrid-cache;hybridcache;multi-level;multilevel;fusion;fusioncache;fusion-cache;performance;async;ziggy</PackageTags>
+		<RootNamespace>ZiggyCreatures.Caching.Fusion.Backplane.AzureServiceBus</RootNamespace>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<PackageReleaseNotes>
+			- Initial release
+		</PackageReleaseNotes>
+		<PackageValidationBaselineVersion>1.0.0</PackageValidationBaselineVersion>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Azure.Messaging.ServiceBus" Version="7.18.3" />
-  </ItemGroup>
+	<ItemGroup>
+		<None Include="artwork\logo-128x128.png" Pack="true" PackagePath="\" />
+		<None Include="docs\README.md" Pack="true" PackagePath="\" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\src\ZiggyCreatures.FusionCache\ZiggyCreatures.FusionCache.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\src\ZiggyCreatures.FusionCache\ZiggyCreatures.FusionCache.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Azure.Messaging.ServiceBus" Version="7.18.4" />
+		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="9.0.2" />
+	</ItemGroup>
+
 
 </Project>
