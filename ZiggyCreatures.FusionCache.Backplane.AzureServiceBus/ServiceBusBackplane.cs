@@ -136,6 +136,7 @@ namespace ZiggyCreatures.Caching.Fusion.Backplane.AzureServiceBus
 			await sender.SendMessageAsync(new ServiceBusMessage()
 			{
 				Body = new BinaryData(BackplaneMessage.ToByteArray(message)),
+				Subject = this._cacheName,
 				TimeToLive = options.Duration
 			}, token);
 		}
@@ -270,6 +271,11 @@ namespace ZiggyCreatures.Caching.Fusion.Backplane.AzureServiceBus
 
 		private async Task ProcessMessageAsync(ProcessMessageEventArgs args)
 		{
+			if (args.Message.Subject != this._cacheName)
+			{
+				return;
+			}
+
 			var data = args.Message.Body.ToArray();
 			var msg = BackplaneMessage.FromByteArray(data);
 
